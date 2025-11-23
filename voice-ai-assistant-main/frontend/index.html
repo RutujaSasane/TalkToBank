@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, orientation=landscape">
+    <title>TalkToBank - Digital Banking Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1E40AF;
+            --primary-blue-dark: #1E3A8A;
+            --primary-blue-light: #3B82F6;
+            --secondary-teal: #06B6D4;
+            --accent-green: #10B981;
+            --accent-red: #EF4444;
+            --accent-yellow: #F59E0B;
+            --bg-primary: #F9FAFB;
+            --bg-secondary: #FFFFFF;
+            --bg-sidebar: #F3F4F6;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Settings Modal Styles */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .settings-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-content {
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .settings-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .settings-body {
+            padding: 1.5rem;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .language-option {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: var(--bg-primary);
+        }
+
+        .language-option:hover {
+            border-color: var(--primary-blue);
+            background: var(--bg-secondary);
+        }
+
+        .language-option.selected {
+            border-color: var(--primary-blue);
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .language-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .language-code {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.75rem 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-blue);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .response-box {
+            background: var(--bg-primary);
+            border-left: 4px solid var(--primary-blue);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .response-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .response-title {
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .response-content {
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        .response-bullet {
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .response-bullet:before {
+            content: "• ";
+            color: var(--primary-blue);
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        /* Profile Modal Styles */
+        .profile-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .profile-modal.active { display:flex; align-items:center; justify-content:center; }
+        .profile-content { background: var(--bg-secondary); border-radius: 12px; width: 90%; max-width: 420px; box-shadow: var(--shadow-xl); }
+        .profile-header { padding: 1.25rem; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; }
+        .profile-body { padding: 1.25rem; }
+        .profile-avatar-large { width: 72px; height:72px; border-radius: 16px; background: var(--primary-blue); color: white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.25rem; }
+        .profile-row { display:flex; gap:1rem; align-items:center; margin-bottom:0.75rem; }
+        .profile-actions { display:flex; gap:0.5rem; margin-top:1rem; }
+        .btn { padding:0.5rem 0.75rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-sidebar); cursor:pointer; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary-blue);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-item {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-item {
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            color: var(--primary-blue);
+        }
+
+        .nav-item.active {
+            color: var(--primary-blue);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-blue);
+            padding-bottom: 2px;
+        }
+
+        .section-view {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .section-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .data-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .data-card-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-card-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .data-card-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .data-table {
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .data-table-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table-body {
+            padding: 0;
+        }
+
+        .data-table-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .data-table-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-table-row:hover {
+            background: var(--bg-sidebar);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-yellow);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue-light);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-sidebar);
+            border-radius: 24px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .user-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            max-width: 100%;
+            margin: 0 auto;
+            width: 100%;
+            height: calc(100vh - 64px);
+        }
+
+        .sidebar {
+            width: 320px;
+            min-width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .account-overview {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .account-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-balance {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .balance-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #A8E6CF;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-sidebar);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .health-score-circle {
+            width: 80px;
+            height: 80px;
+            margin: 0.75rem auto;
+            position: relative;
+        }
+
+        .score-svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .score-label-sm {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+        }
+
+        .content-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chat-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 400px;
+            flex: 1;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 75%;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--text-muted);
+        }
+
+        .message-content {
+            background: var(--bg-sidebar);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            flex: 1;
+        }
+
+        .message.user .message-content {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .transactions-table {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .transactions-table thead {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .transactions-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .transactions-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .transactions-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .transactions-table tbody tr:hover {
+            background: var(--bg-sidebar);
+        }
+
+        .transaction-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .transaction-type.credit {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .transaction-type.debit {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .transaction-date {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .transaction-recipient {
+            font-weight: 500;
+        }
+
+        .chat-input-area {
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.25rem;
+        }
+
+        .input-btn:hover {
+            background: var(--bg-sidebar);
+            border-color: var(--primary-blue);
+        }
+
+        .input-btn.recording {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            color: white;
+            animation: recordPulse 1.5s infinite;
+        }
+
+        @keyframes recordPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .message-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            background: var(--bg-sidebar);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--primary-blue);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.25rem;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .send-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.4rem;
+            padding: 1rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+                min-width: 240px;
+            }
+            .main-container {
+                gap: 1rem;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 1rem;
+            }
+            
+            .navbar-menu {
+                display: none;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-sidebar);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+    <style>
+        /* Override and polish styles for improved UI */
+        .main-container { display:flex; gap:1.5rem; padding:1.5rem; max-width:100%; margin:0; width:100%; height:100%; }
+        aside.sidebar { width:320px; min-width:280px; flex-shrink:0; }
+        .content-area { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+        .navbar { padding: 0 1.5rem; height:64px; }
+        .navbar-brand span { font-size:1.15rem; }
+        .navbar-menu .nav-item { padding:0.5rem 0.6rem; border-radius:8px; }
+        .nav-item:hover { background: rgba(30,64,175,0.06); }
+
+        .chat-container { border-radius:14px; overflow:hidden; }
+        .chat-messages { padding:1.5rem 1.75rem; gap:1rem; }
+        .message { max-width:78%; }
+        .message.user { max-width:62%; }
+        .message-avatar { width:44px; height:44px; }
+        .message-content { padding:0.85rem 1rem; }
+
+        .chat-input-area { padding:0.85rem 1rem; }
+        .message-input { min-height:48px; font-size:0.96rem; }
+        .input-btn { padding:0.6rem; border-radius:10px; }
+        .input-btn.recording { background: linear-gradient(90deg,var(--accent-red),#ff8a8a); box-shadow:0 6px 18px rgba(255,90,90,0.12); color:white }
+        .send-btn { padding:0.65rem 0.95rem; box-shadow:0 6px 18px rgba(59,130,246,0.12); }
+
+        /* Response box tweaks */
+        .response-box { border-radius:10px; padding:1rem 1.2rem; }
+
+        /* Profile and settings small-screen adjustments */
+        @media (max-width: 900px) {
+            .main-container { padding:1rem; flex-direction:row; }
+            aside.sidebar { width:280px; order:1; }
+            .content-area { order:2; flex:1; }
+        }
+        
+        /* Landscape orientation preference */
+        @media (orientation: portrait) {
+            .main-container {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="brand-icon">TTB</div>
+            <span>TalkToBank</span>
+        </div>
+        <div class="navbar-menu">
+            <a href="#" class="nav-item" onclick="showSection('chat', this)">Chat</a>
+            <a href="#" class="nav-item" onclick="showSection('accounts', this)">Accounts</a>
+            <a href="#" class="nav-item" onclick="showSection('payments', this)">Payments</a>
+            <a href="#" class="nav-item" onclick="showSection('cards', this)">Cards</a>
+            <a href="#" class="nav-item" onclick="showSection('loans', this)">Loans</a>
+            <a href="#" class="nav-item" onclick="showSection('investments', this)">Investments</a>
+            <a href="#" class="nav-item" onclick="openSettings(event)" style="margin-left: auto;">⚙️ Settings</a>
+        </div>
+        <div class="user-profile" onclick="openProfile()" title="Open profile">
+            <div class="user-avatar">DU</div>
+            <span class="user-name">Demo User</span>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="account-overview">
+                <div class="account-label">Total Balance</div>
+                <div class="account-balance" id="sidebarBalance">Loading...</div>
+                <div class="balance-change">
+                    <span>↗</span>
+                    <span>+2.4% from last month</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">Financial Health</div>
+                <div class="stat-card">
+                    <div style="text-align: center;">
+                        <div class="health-score-circle">
+                            <svg class="score-svg" width="80" height="80" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="36" fill="none" stroke="#E9ECEF" stroke-width="6"/>
+                                <circle cx="40" cy="40" r="36" fill="none" stroke="#2ECC71" stroke-width="6" 
+                                        stroke-dasharray="226" stroke-dashoffset="56.5" stroke-linecap="round"/>
+                            </svg>
+                            <div class="score-text">
+                                <div class="score-number">75</div>
+                                <div class="score-label-sm">Good</div>
+                            </div>
+                        </div>
+                        <div class="stat-subtitle">Credit Health Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">Quick Stats</div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Monthly Spending</span>
+                    </div>
+                    <div class="stat-value">₹18,450</div>
+                    <div class="stat-subtitle">45% of income</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Active Loans</span>
+                    </div>
+                    <div class="stat-value">₹5,00,000</div>
+                    <div class="stat-subtitle">8.5% interest rate</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <!-- Chat Section -->
+            <div id="section-chat" class="section-view active">
+                <div class="content-header">
+                    <h1 class="content-title">Banking Assistant</h1>
+                    <p class="content-subtitle">How can I help you with your finances today?</p>
+                </div>
+
+                <div class="action-bar">
+                <button class="action-btn" onclick="triggerFileUpload()">
+                    <span>📎</span>
+                    <span>Upload Document</span>
+                </button>
+                <button class="action-btn" onclick="getFinancialAdvice()">
+                    <span>💡</span>
+                    <span>Financial Advice</span>
+                </button>
+                <button class="action-btn" onclick="getHealthScore()">
+                    <span>📊</span>
+                    <span>Health Report</span>
+                </button>
+                <button class="action-btn" onclick="getSpendingAnalysis()">
+                    <span>📈</span>
+                    <span>Spending Analysis</span>
+                </button>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-avatar">TTB</div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <strong>Hello! 👋 Welcome to TalkToBank Digital Assistant</strong><br><br>
+                                I'm your personal banking assistant, powered by AI to help you with:<br><br>
+                                💳 <strong>Account Services:</strong> Balance checks, statements, transactions<br>
+                                💰 <strong>Payments & Transfers:</strong> Send money, pay bills<br>
+                                🏦 <strong>Loans & Investments:</strong> FD, RD, loan details<br>
+                                📊 <strong>Financial Planning:</strong> Budgeting, savings advice<br>
+                                🔒 <strong>Security:</strong> Card blocking, fraud reporting<br>
+                                📞 <strong>Support:</strong> 24/7 assistance<br><br>
+                                <em>Try asking: "Check my balance" or "What are FD interest rates?"</em>
+                            </div>
+                            <div class="message-time" id="welcomeTime"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <input type="file" id="fileInput" class="file-input" accept="image/*,application/pdf" onchange="handleFileUpload(event)">
+                    <div class="input-wrapper">
+                        <div class="input-controls">
+                            <button class="input-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice input">
+                                🎤
+                            </button>
+                        </div>
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="Type your message or ask a question..."
+                            rows="1"
+                            onkeydown="handleKeyPress(event)"
+                        ></textarea>
+                        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                            →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Accounts Section -->
+            <div id="section-accounts" class="section-view">
+                <div class="section-header">
+                    <h1 class="section-title">My Accounts</h1>
+                    <p class="section-subtitle">View and manage all your accounts</p>
+                </div>
+                <div id="accountsContent">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Section -->
+            <div id="section-payments" class="section-view">
+                <div class="section-header">
+                    <h1 class="section-title">Payments & Transactions</h1>
+                    <p class="section-subtitle">Track your spending and payment history</p>
+                </div>
+                <div id="paymentsContent">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cards Section -->
+            <div id="section-cards" class="section-view">
+                <div class="section-header">
+                    <h1 class="section-title">My Cards</h1>
+                    <p class="section-subtitle">Manage your debit and credit cards</p>
+                </div>
+                <div id="cardsContent">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loans Section -->
+            <div id="section-loans" class="section-view">
+                <div class="section-header">
+                    <h1 class="section-title">My Loans</h1>
+                    <p class="section-subtitle">View loan details and payment schedules</p>
+                </div>
+                <div id="loansContent">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investments Section -->
+            <div id="section-investments" class="section-view">
+                <div class="section-header">
+                    <h1 class="section-title">My Investments</h1>
+                    <p class="section-subtitle">Track your investments and returns</p>
+                </div>
+                <div id="investmentsContent">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Use relative URLs to work with Vite proxy, fallback to direct connection
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:5001' 
+            : '';
+        
+        // Helper function to get API URL
+        function getApiUrl(endpoint) {
+            if (API_BASE) {
+                return `${API_BASE}${endpoint}`;
+            }
+            return endpoint;
+        }
+        
+        // Track if current input is from voice or text
+        let isVoiceInput = false;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recognition = null;
+
+        document.getElementById('welcomeTime').textContent = new Date().toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        function addMessage(text, type = 'assistant') {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const avatar = type === 'assistant' ? 'TTB' : 'DU';
+            
+            // Format the text for better structure if it's from assistant
+            let formattedText = text;
+            if (type === 'assistant') {
+                // Wrap in response-box for structured display
+                formattedText = `<div class="response-box">${formatStructuredResponse(text)}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-text">${formattedText}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">TTB</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        function formatTransactionsTable(transactions) {
+            if (!transactions || transactions.length === 0) {
+                return '<p>No transactions found.</p>';
+            }
+
+            let tableHTML = '<table class="transactions-table"><thead><tr>';
+            tableHTML += '<th>Date</th><th>Type</th><th>Recipient</th><th>Amount</th>';
+            tableHTML += '</tr></thead><tbody>';
+
+            transactions.forEach(txn => {
+                // Parse date - handle both ISO format and SQLite datetime format
+                let formattedDate = txn.date;
+                try {
+                    // Replace space with 'T' for ISO format if needed
+                    const dateStr = txn.date.includes('T') ? txn.date : txn.date.replace(' ', 'T');
+                    const date = new Date(dateStr);
+                    if (!isNaN(date.getTime())) {
+                        formattedDate = date.toLocaleString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                } catch (e) {
+                    // If date parsing fails, use original date string
+                    formattedDate = txn.date;
+                }
+                
+                const typeClass = txn.type === 'credit' ? 'credit' : 'debit';
+                const typeLabel = txn.type === 'credit' ? 'Credit' : 'Debit';
+                const recipient = txn.recipient || 'N/A';
+                
+                tableHTML += `<tr>`;
+                tableHTML += `<td class="transaction-date">${formattedDate}</td>`;
+                tableHTML += `<td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>`;
+                tableHTML += `<td class="transaction-recipient">${recipient}</td>`;
+                tableHTML += `<td class="transaction-amount">₹${parseFloat(txn.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>`;
+                tableHTML += `</tr>`;
+            });
+
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+
+        async function sendMessage(skipConfirmation = false) {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Check if this is a transfer request and ask for confirmation
+            const transferPattern = /transfer|send|भेज|पाठव|ट्रांसफर|हस्तांतरण/i;
+            if (transferPattern.test(text) && !skipConfirmation) {
+                // Get confirmation message based on user's language preference
+                let confirmMsg = 'Are you sure you want to proceed with this transfer?';
+                let cancelMsg = 'Transfer cancelled.';
+                
+                if (userSettings.language === 'hi') {
+                    confirmMsg = 'क्या आप इस ट्रांसफर के साथ आगे बढ़ना चाहते हैं?';
+                    cancelMsg = 'ट्रांसफर रद्द कर दिया गया।';
+                } else if (userSettings.language === 'mr') {
+                    confirmMsg = 'तुम्हाला हस्तांतरणासह पुढे जायचे आहे का?';
+                    cancelMsg = 'हस्तांतरण रद्द केले.';
+                }
+                
+                const confirmed = confirm(confirmMsg);
+                if (!confirmed) {
+                    addMessage(cancelMsg, 'assistant');
+                    return;
+                }
+            }
+            
+            addMessage(text, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Reset voice input flag (will be set to true if voice input is used)
+            const wasVoiceInput = isVoiceInput;
+            isVoiceInput = false;
+            
+            showTyping();
+            
+            try {
+                const response = await fetch(getApiUrl('/api/process'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, user_id: 1, response_language: userSettings.language })
+                });
+                
+                const data = await response.json();
+                removeTyping();
+                
+                if (data.text) {
+                    // Format response with tips if available
+                    let formattedResponse = data.text;
+                    
+                    // Check if we have transactions to display in table format
+                    // Check both by intent and by data structure
+                    const hasTransactions = (data.intent === 'transaction_history' || 
+                                           (data.data && data.data.transactions && Array.isArray(data.data.transactions) && data.data.transactions.length > 0));
+                    
+                    if (hasTransactions && data.data && data.data.transactions && data.data.transactions.length > 0) {
+                        console.log('Rendering transactions table:', data.data.transactions);
+                        formattedResponse += '<br><br>' + formatTransactionsTable(data.data.transactions);
+                    } else if (data.data && data.data.tips && data.data.tips.length > 0) {
+                        formattedResponse += '<br><br><strong>💡 Quick Tips:</strong><br>';
+                        data.data.tips.forEach(tip => {
+                            formattedResponse += `• ${tip}<br>`;
+                        });
+                    }
+                    addMessage(formattedResponse, 'assistant');
+                    
+                    // Only play audio if the input was from voice (not text)
+                    if (wasVoiceInput && userSettings.autoplayAudio && userSettings.voiceEnabled) {
+                        // Prefer client-side TTS for fast responses
+                        speakText(data.text || formattedResponse, userSettings.language);
+                        // If browser does not support speechSynthesis, fallback to server audio if provided
+                        if (!('speechSynthesis' in window) && data.audio_url) {
+                            const audio = new Audio(getApiUrl(data.audio_url));
+                            audio.play().catch(err => console.log('Audio playback failed'));
+                        }
+                    } else if (wasVoiceInput && data.audio_url) {
+                        // Only use server audio if voice input was used
+                        const audio = new Audio(getApiUrl(data.audio_url));
+                        audio.play().catch(err => console.log('Audio playback failed'));
+                    }
+                    // For text input, no audio playback
+                    
+                    if (data.intent === 'check_balance' || data.intent === 'transfer_funds') {
+                        updateBalance();
+                    }
+                } else {
+                    addMessage('⚠️ I received your message but couldn\'t generate a proper response. Please try rephrasing your question.', 'assistant');
+                }
+            } catch (error) {
+                removeTyping();
+                console.error('Error:', error);
+                addMessage('⚠️ <strong>Connection Error</strong><br><br>I\'m having trouble connecting to the server. Please ensure:<br>• The backend server is running on port 5001<br>• Your internet connection is stable<br>• Try refreshing the page<br><br><em>Error: ' + error.message + '</em>', 'assistant');
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function toggleVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!isRecording) {
+                // Try Web Speech API first for in-browser recognition
+                    if (SpeechRecognition) {
+                    try {
+                        // Request mic stream so we can capture audio as fallback
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        const audioChunks = [];
+                        let recognitionHasResult = false;
+
+                        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                        mediaRecorder.start();
+
+                        recognition = new SpeechRecognition();
+                        recognition.lang = mapRecognitionLang(userSettings.language);
+                        recognition.interimResults = false;
+                        recognition.maxAlternatives = 1;
+
+                        recognition.onresult = (event) => {
+                            recognitionHasResult = true;
+                            const transcript = event.results[0][0].transcript;
+                            document.getElementById('messageInput').value = transcript;
+                            // stop media recorder and release stream
+                            try { mediaRecorder.stop(); } catch(e){}
+                            try { stream.getTracks().forEach(t => t.stop()); } catch(e){}
+                            // Mark as voice input before sending
+                            isVoiceInput = true;
+                            sendMessage();
+                        };
+
+                        recognition.onerror = (e) => {
+                            console.error('Recognition error', e);
+                            addMessage('🎤 Voice recognition error: ' + (e.error || 'unknown') + '. Falling back to server STT.', 'assistant');
+                        };
+
+                        recognition.onend = async () => {
+                            // If recognition didn't produce a result, send recorded audio to server STT
+                            if (!recognitionHasResult) {
+                                try {
+                                    mediaRecorder.onstop = async () => {
+                                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                                        stream.getTracks().forEach(track => track.stop());
+
+                                        showTyping();
+                                        const formData = new FormData();
+                                        formData.append('audio', audioBlob, 'recording.wav');
+                                        formData.append('language', userSettings.language || 'en');
+
+                                        try {
+                                            const response = await fetch(getApiUrl('/api/stt'), {
+                                                method: 'POST',
+                                                body: formData
+                                            });
+                                            const data = await response.json();
+                                            removeTyping();
+                                            if (data.text) {
+                                                document.getElementById('messageInput').value = data.text;
+                                                // Mark as voice input before sending
+                                                isVoiceInput = true;
+                                                sendMessage();
+                                            } else {
+                                                addMessage('🎤 Sorry, I could not transcribe your speech.', 'assistant');
+                                            }
+                                        } catch (error) {
+                                            removeTyping();
+                                            console.error('STT Error:', error);
+                                            addMessage('🎤 <strong>Voice Recognition Failed</strong><br><br>Unable to process your voice input. Please try typing your message.', 'assistant');
+                                        }
+                                    };
+                                    if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+                                } catch (e) {
+                                    console.error('Fallback STT failed', e);
+                                }
+                            }
+
+                            isRecording = false;
+                            voiceBtn.classList.remove('recording');
+                            voiceBtn.textContent = '🎤';
+                        };
+
+                        recognition.start();
+                        isRecording = true;
+                        voiceBtn.classList.add('recording');
+                        voiceBtn.textContent = '⏹️';
+                    } catch (err) {
+                        console.error('SpeechRecognition start failed', err);
+                        addMessage('🎤 Unable to start speech recognition in this browser. Falling back to server STT.', 'assistant');
+                        // fallback: prompt user to grant mic then rely on mediaRecorder handled below
+                    }
+                } else {
+                    // Fallback to MediaRecorder + server-side STT
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        const audioChunks = [];
+
+                        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            showTyping();
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob, 'recording.wav');
+                            formData.append('language', userSettings.language || 'en');
+                            
+                            try {
+                                const response = await fetch(getApiUrl('/api/stt'), {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                const data = await response.json();
+                                removeTyping();
+                                
+                                if (data.text) {
+                                    document.getElementById('messageInput').value = data.text;
+                                    // Mark as voice input before sending
+                                    isVoiceInput = true;
+                                    sendMessage();
+                                }
+                            } catch (error) {
+                                removeTyping();
+                                console.error('STT Error:', error);
+                                addMessage('🎤 <strong>Voice Recognition Failed</strong><br><br>Unable to process your voice input. Please:<br>• Check your microphone permissions<br>• Speak clearly and avoid background noise<br>• Try typing your message instead', 'assistant');
+                            }
+                        };
+
+                        mediaRecorder.start();
+                        isRecording = true;
+                        voiceBtn.classList.add('recording');
+                        voiceBtn.textContent = '⏹️';
+                    } catch (error) {
+                        alert('Microphone access denied. Please enable microphone permissions.');
+                    }
+                }
+            } else {
+                // Stop whichever is active
+                try {
+                    if (recognition && typeof recognition.stop === 'function') {
+                        recognition.stop();
+                    }
+                } catch (e) {}
+
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            }
+        }
+
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            addMessage(`Uploaded document: ${file.name}`, 'user');
+            showTyping();
+
+            const formData = new FormData();
+            formData.append('document', file);
+            formData.append('user_id', 1);
+
+            try {
+                const response = await fetch(getApiUrl('/api/upload_document'), {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                removeTyping();
+
+                if (data.success) {
+                    let message = `Document analyzed successfully.<br><br>`;
+                    if (data.data.total_amount) {
+                        message += `<strong>Amount:</strong> ₹${data.data.total_amount.toLocaleString()}<br>`;
+                    }
+                    if (data.data.category) {
+                        message += `<strong>Category:</strong> ${data.data.category}<br>`;
+                    }
+                    if (data.insights) {
+                        message += `<br>${data.insights.join('<br>')}`;
+                    }
+                    addMessage(message, 'assistant');
+                } else {
+                    addMessage('Unable to process document. Please try again.', 'assistant');
+                }
+            } catch (error) {
+                removeTyping();
+                console.error('Upload Error:', error);
+                addMessage('📋 <strong>Document Upload Failed</strong><br><br>Unable to process your document. Please ensure:<br>• Backend server is running<br>• File size is under 16MB<br>• File format is supported (PDF, JPG, PNG)<br><br><em>Try uploading a different file</em>', 'assistant');
+            }
+
+            event.target.value = '';
+        }
+
+        async function getFinancialAdvice() {
+            const question = prompt('What financial advice would you like?\n\nExamples:\n• How can I save more money?\n• Should I invest in mutual funds?\n• How do I reduce debt?');
+            if (!question) return;
+
+            addMessage(question, 'user');
+            showTyping();
+
+            try {
+                const response = await fetch(getApiUrl('/api/financial_advice'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: question, user_id: 1 })
+                });
+                const data = await response.json();
+                removeTyping();
+
+                if (data.advice) {
+                    addMessage(`<strong>Financial Advice:</strong><br><br>${data.advice}`, 'assistant');
+                }
+            } catch (error) {
+                removeTyping();
+                addMessage('Unable to provide advice at the moment. Please try again later.', 'assistant');
+            }
+        }
+
+        async function getHealthScore() {
+            addMessage('Show me my financial health report', 'user');
+            showTyping();
+
+            try {
+                const response = await fetch(getApiUrl('/api/financial_health/1'));
+                const data = await response.json();
+                removeTyping();
+
+                if (data.success && data.health) {
+                    let message = `<strong>💡 Financial Health Report</strong><br><br>`;
+                    message += `<strong>Health Score:</strong> ${data.health.score}/100 (${data.health.health_level})<br><br>`;
+                    
+                    if (data.health.recommendations && data.health.recommendations.length > 0) {
+                        message += `<strong>🎯 Recommendations:</strong><br>`;
+                        data.health.recommendations.forEach(rec => message += `${rec}<br>`);
+                    }
+                    
+                    addMessage(message, 'assistant');
+                } else if (data.error) {
+                    addMessage(`⚠️ Error: ${data.error}`, 'assistant');
+                } else {
+                    addMessage('Unable to calculate health score. Please try again.', 'assistant');
+                }
+            } catch (error) {
+                removeTyping();
+                console.error('Health Score Error:', error);
+                addMessage('⚠️ <strong>Unable to Calculate Health Score</strong><br><br>Please ensure:<br>• Backend server is running on port 5001<br>• Database is initialized<br>• Try refreshing the page', 'assistant');
+            }
+        }
+
+        async function getSpendingAnalysis() {
+            addMessage('Show me my spending analysis', 'user');
+            showTyping();
+
+            try {
+                const response = await fetch(getApiUrl('/api/financial_health/1'));
+                const data = await response.json();
+                removeTyping();
+
+                if (data.success && data.spending) {
+                    let message = `<strong>📊 Spending Analysis</strong><br><br>`;
+                    message += `<strong>Total Spending:</strong> ₹${data.spending.total_spending.toLocaleString()}<br><br>`;
+                    
+                    if (data.spending.top_category) {
+                        message += `<strong>Top Category:</strong> ${data.spending.top_category.name} (₹${data.spending.top_category.amount.toLocaleString()})<br><br>`;
+                    }
+                    
+                    message += `<strong>Breakdown by Category:</strong><br>`;
+                    for (const [category, amount] of Object.entries(data.spending.by_category)) {
+                        if (amount > 0) {
+                            const percentage = data.spending.percentages[category] || 0;
+                            message += `• ${category}: ₹${amount.toLocaleString()} (${percentage}%)<br>`;
+                        }
+                    }
+                    
+                    addMessage(message, 'assistant');
+                } else {
+                    addMessage('No spending data available. Make some transactions to see analysis.', 'assistant');
+                }
+            } catch (error) {
+                removeTyping();
+                console.error('Spending Analysis Error:', error);
+                addMessage('⚠️ <strong>Unable to Analyze Spending</strong><br><br>Please ensure the backend server is running and try again.', 'assistant');
+            }
+        }
+
+        async function updateBalance() {
+            try {
+                const response = await fetch(getApiUrl('/api/user/1/summary'));
+                const data = await response.json();
+                if (data.success && data.summary && data.summary.balance !== undefined) {
+                    const balance = parseFloat(data.summary.balance);
+                    document.getElementById('sidebarBalance').textContent = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else {
+                    // Fallback: try to get balance from accounts endpoint
+                    const accountsResponse = await fetch(getApiUrl('/api/accounts/1'));
+                    const accountsData = await accountsResponse.json();
+                    if (accountsData.success && accountsData.total_balance !== undefined) {
+                        const balance = parseFloat(accountsData.total_balance);
+                        document.getElementById('sidebarBalance').textContent = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    } else {
+                        document.getElementById('sidebarBalance').textContent = '₹0.00';
+                    }
+                }
+            } catch (error) {
+                console.error('Balance update failed:', error);
+                // Fallback to accounts endpoint
+                try {
+                    const accountsResponse = await fetch(getApiUrl('/api/accounts/1'));
+                    const accountsData = await accountsResponse.json();
+                    if (accountsData.success && accountsData.total_balance !== undefined) {
+                        const balance = parseFloat(accountsData.total_balance);
+                        document.getElementById('sidebarBalance').textContent = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    } else {
+                        document.getElementById('sidebarBalance').textContent = '₹0.00';
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback balance update failed:', fallbackError);
+                    document.getElementById('sidebarBalance').textContent = '₹0.00';
+                }
+            }
+        }
+
+        // Navigation Functions
+        function showSection(sectionName, element) {
+            // Hide all sections
+            document.querySelectorAll('.section-view').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            const section = document.getElementById(`section-${sectionName}`);
+            if (section) {
+                section.classList.add('active');
+            }
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            // Load data for the section
+            loadSectionData(sectionName);
+        }
+
+        async function loadSectionData(sectionName) {
+            const userId = 1;
+            
+            try {
+                switch(sectionName) {
+                    case 'accounts':
+                        await loadAccounts(userId);
+                        break;
+                    case 'payments':
+                        await loadPayments(userId);
+                        break;
+                    case 'cards':
+                        await loadCards(userId);
+                        break;
+                    case 'loans':
+                        await loadLoans(userId);
+                        break;
+                    case 'investments':
+                        await loadInvestments(userId);
+                        break;
+                }
+            } catch (error) {
+                console.error(`Error loading ${sectionName}:`, error);
+            }
+        }
+
+        async function loadAccounts(userId) {
+            const contentDiv = document.getElementById('accountsContent');
+            try {
+                const response = await fetch(getApiUrl(`/api/accounts/${userId}`));
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div class="data-grid">';
+                    
+                    // Total balance card
+                    html += `
+                        <div class="data-card">
+                            <div class="data-card-header">
+                                <span class="data-card-title">Total Balance</span>
+                            </div>
+                            <div class="data-card-value">₹${data.total_balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                            <div class="data-card-label">Across all accounts</div>
+                        </div>
+                    `;
+                    
+                    // Account cards
+                    data.accounts.forEach(account => {
+                        html += `
+                            <div class="data-card">
+                                <div class="data-card-header">
+                                    <span class="data-card-title">${account.account_type.charAt(0).toUpperCase() + account.account_type.slice(1)} Account</span>
+                                    <span class="badge badge-success">Active</span>
+                                </div>
+                                <div class="data-card-value">₹${account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                                <div class="data-card-label">Account ID: ${account.account_id}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Unable to load accounts.</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<p style="text-align: center; color: var(--accent-red);">Error loading accounts.</p>';
+            }
+        }
+
+        async function loadPayments(userId) {
+            const contentDiv = document.getElementById('paymentsContent');
+            try {
+                const response = await fetch(getApiUrl(`/api/payments/${userId}`));
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div class="data-grid" style="margin-bottom: 2rem;">';
+                    
+                    // Summary cards
+                    html += `
+                        <div class="data-card">
+                            <div class="data-card-header">
+                                <span class="data-card-title">Monthly Spending</span>
+                            </div>
+                            <div class="data-card-value">₹${data.monthly_spending.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                            <div class="data-card-label">This month</div>
+                        </div>
+                        <div class="data-card">
+                            <div class="data-card-header">
+                                <span class="data-card-title">Transactions</span>
+                            </div>
+                            <div class="data-card-value">${data.transaction_count}</div>
+                            <div class="data-card-label">Recent transactions</div>
+                        </div>
+                    `;
+                    
+                    html += '</div>';
+                    
+                    // Transactions table
+                    if (data.recent_transactions && data.recent_transactions.length > 0) {
+                        html += '<div class="data-table"><div class="data-table-header">Recent Transactions</div><div class="data-table-body">';
+                        data.recent_transactions.forEach(txn => {
+                            const date = new Date(txn.date);
+                            const formattedDate = date.toLocaleString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            const typeClass = txn.type === 'credit' ? 'badge-success' : 'badge-warning';
+                            html += `
+                                <div class="data-table-row">
+                                    <div>${formattedDate}</div>
+                                    <div><span class="badge ${typeClass}">${txn.type}</span></div>
+                                    <div>${txn.recipient || 'N/A'}</div>
+                                    <div style="font-weight: 600;">₹${txn.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            `;
+                        });
+                        html += '</div></div>';
+                    } else {
+                        html += '<p style="text-align: center; color: var(--text-secondary);">No recent transactions.</p>';
+                    }
+                    
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Unable to load payments.</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<p style="text-align: center; color: var(--accent-red);">Error loading payments.</p>';
+            }
+        }
+
+        async function loadCards(userId) {
+            const contentDiv = document.getElementById('cardsContent');
+            try {
+                const response = await fetch(getApiUrl(`/api/cards/${userId}`));
+                const data = await response.json();
+                
+                if (data.success && data.cards.length > 0) {
+                    let html = '<div class="data-grid">';
+                    
+                    data.cards.forEach(card => {
+                        const cardType = card.card_type.charAt(0).toUpperCase() + card.card_type.slice(1);
+                        const limitInfo = card.limit_amount > 0 
+                            ? `<div class="data-card-label">Limit: ₹${card.limit_amount.toLocaleString('en-IN')} | Available: ₹${card.available_limit.toLocaleString('en-IN')}</div>`
+                            : '<div class="data-card-label">Debit Card</div>';
+                        
+                        html += `
+                            <div class="data-card">
+                                <div class="data-card-header">
+                                    <span class="data-card-title">${cardType} Card</span>
+                                    <span class="badge badge-success">${card.status}</span>
+                                </div>
+                                <div class="data-card-value" style="font-size: 1.25rem; font-family: monospace;">${card.card_number}</div>
+                                ${limitInfo}
+                                <div class="data-card-label" style="margin-top: 0.5rem;">Expires: ${card.expiry_date}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No cards found.</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<p style="text-align: center; color: var(--accent-red);">Error loading cards.</p>';
+            }
+        }
+
+        async function loadLoans(userId) {
+            const contentDiv = document.getElementById('loansContent');
+            try {
+                const response = await fetch(getApiUrl(`/api/loans/${userId}`));
+                const data = await response.json();
+                
+                if (data.success && data.loans.length > 0) {
+                    let html = '<div class="data-grid">';
+                    
+                    data.loans.forEach(loan => {
+                        html += `
+                            <div class="data-card">
+                                <div class="data-card-header">
+                                    <span class="data-card-title">Loan #${loan.loan_id}</span>
+                                    <span class="badge badge-info">${loan.status}</span>
+                                </div>
+                                <div class="data-card-value">₹${loan.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                                <div class="data-card-label">Interest Rate: ${loan.interest_rate}% per annum</div>
+                                <div class="data-card-label" style="margin-top: 0.5rem;">Due Date: ${loan.due_date}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No active loans.</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<p style="text-align: center; color: var(--accent-red);">Error loading loans.</p>';
+            }
+        }
+
+        async function loadInvestments(userId) {
+            const contentDiv = document.getElementById('investmentsContent');
+            try {
+                const response = await fetch(getApiUrl(`/api/investments/${userId}`));
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div class="data-grid" style="margin-bottom: 2rem;">';
+                    
+                    // Total investment card
+                    html += `
+                        <div class="data-card">
+                            <div class="data-card-header">
+                                <span class="data-card-title">Total Investment</span>
+                            </div>
+                            <div class="data-card-value">₹${data.total_investment.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                            <div class="data-card-label">Across all investments</div>
+                        </div>
+                    `;
+                    
+                    html += '</div>';
+                    
+                    // Investment cards
+                    if (data.investments && data.investments.length > 0) {
+                        html += '<div class="data-grid">';
+                        data.investments.forEach(inv => {
+                            const maturityInfo = inv.maturity_date 
+                                ? `<div class="data-card-label">Maturity: ${inv.maturity_date}</div>`
+                                : '<div class="data-card-label">Open-ended</div>';
+                            
+                            html += `
+                                <div class="data-card">
+                                    <div class="data-card-header">
+                                        <span class="data-card-title">${inv.investment_type}</span>
+                                        <span class="badge badge-success">${inv.status}</span>
+                                    </div>
+                                    <div class="data-card-value">₹${inv.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                                    <div class="data-card-label">Interest Rate: ${inv.interest_rate}%</div>
+                                    ${maturityInfo}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    } else {
+                        html += '<p style="text-align: center; color: var(--text-secondary);">No investments found.</p>';
+                    }
+                    
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Unable to load investments.</p>';
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<p style="text-align: center; color: var(--accent-red);">Error loading investments.</p>';
+            }
+        }
+
+        // Initialize - set Chat as active and load balance
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatNav = document.querySelector('.nav-item[onclick*="chat"]');
+            if (chatNav) {
+                chatNav.classList.add('active');
+            }
+            // Load balance from database on page load
+            updateBalance();
+        });
+
+        setTimeout(() => {
+            addMessage('💡 <strong>Quick Tips:</strong><br>• Ask "Check my balance"<br>• Try "Transfer money to someone"<br>• Upload bills for automatic tracking<br>• Get personalized financial advice', 'assistant');
+        }, 2000);
+
+        // Settings functionality
+        let userSettings = {
+            language: 'en',
+            voiceEnabled: true,
+            autoplayAudio: true
+        };
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('userSettings');
+            if (saved) {
+                userSettings = JSON.parse(saved);
+            }
+            applySettings();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('userSettings', JSON.stringify(userSettings));
+        }
+
+        function applySettings() {
+            // Apply language setting
+            document.documentElement.lang = userSettings.language;
+            
+            // Update language selector UI
+            document.querySelectorAll('.language-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.lang === userSettings.language) {
+                    opt.classList.add('selected');
+                }
+            });
+
+            // Update toggle switches
+            document.getElementById('voiceToggle').checked = userSettings.voiceEnabled;
+            document.getElementById('audioToggle').checked = userSettings.autoplayAudio;
+        }
+
+        function openSettings(e) {
+            e.preventDefault();
+            const modal = document.getElementById('settingsModal');
+            modal.classList.add('active');
+            applySettings();
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('active');
+        }
+
+        function setLanguage(lang) {
+            userSettings.language = lang;
+            saveSettings();
+            applySettings();
+        }
+
+        function toggleVoice() {
+            userSettings.voiceEnabled = document.getElementById('voiceToggle').checked;
+            saveSettings();
+        }
+
+        function toggleAutoplay() {
+            userSettings.autoplayAudio = document.getElementById('audioToggle').checked;
+            saveSettings();
+        }
+
+        function openProfile() {
+            document.getElementById('profileModal').classList.add('active');
+            document.getElementById('profileLanguage').textContent = (userSettings.language === 'en' ? 'English' : (userSettings.language === 'hi' ? 'हिंदी' : (userSettings.language === 'mr' ? 'मराठी' : 'Hinglish')));
+            document.getElementById('profileVoice').textContent = userSettings.voiceEnabled ? 'Enabled' : 'Disabled';
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal) {
+                closeSettings();
+            }
+        });
+
+        // Format response with proper structure
+        function formatStructuredResponse(text) {
+            let formatted = text;
+            
+            // Add formatting for headers (lines ending with :)
+            formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Format bullet points
+            formatted = formatted.replace(/• /g, '<div class="response-bullet">');
+            formatted = formatted.replace(/\n/g, '</div>\n');
+            
+            // Format sections
+            const sections = formatted.split('\n\n');
+            if (sections.length > 1) {
+                formatted = sections.map(section => {
+                    if (section.includes('<strong>')) {
+                        const [title, ...content] = section.split('\n');
+                        return `<div class="response-section">
+                                  <div class="response-title">${title}</div>
+                                  <div class="response-content">${content.join('<br>')}</div>
+                                </div>`;
+                    }
+                    return `<div class="response-content">${section}</div>`;
+                }).join('');
+            }
+            
+            return formatted;
+        }
+
+        // Helpers for speech and language mapping
+        function stripHtml(html) {
+            return html.replace(/<[^>]+>/g, '');
+        }
+
+        function mapSpeechLang(lang) {
+            if (lang === 'hi') return 'hi-IN';
+            if (lang === 'mr') return 'mr-IN';
+            if (lang === 'hinglish') return 'en-IN';
+            return 'en-US';
+        }
+
+        function speakText(text, lang) {
+            if (!userSettings.autoplayAudio || !userSettings.voiceEnabled) return;
+            const utterText = stripHtml(text || '');
+            if (!utterText) return;
+
+            if ('speechSynthesis' in window) {
+                try {
+                    const utter = new SpeechSynthesisUtterance(utterText);
+                    utter.lang = mapSpeechLang(lang);
+                    speechSynthesis.cancel();
+                    speechSynthesis.speak(utter);
+                } catch (e) {
+                    console.error('TTS failed', e);
+                }
+            }
+        }
+
+        function mapRecognitionLang(lang) {
+            if (lang === 'hi') return 'hi-IN';
+            if (lang === 'mr') return 'mr-IN';
+            if (lang === 'hinglish') return 'en-IN';
+            return 'en-US';
+        }
+
+        // Load settings on page load
+        loadSettings();
+    </script>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 class="settings-title">Settings</h2>
+                <button class="close-btn" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="settings-body">
+                <!-- Language Settings -->
+                <div class="settings-section">
+                    <label class="settings-label">🌍 Language Preference</label>
+                    <div class="language-grid">
+                        <div class="language-option selected" data-lang="en" onclick="setLanguage('en')">
+                            <div class="language-name">English</div>
+                            <div class="language-code">en</div>
+                        </div>
+                        <div class="language-option" data-lang="hi" onclick="setLanguage('hi')">
+                            <div class="language-name">हिंदी</div>
+                            <div class="language-code">hi</div>
+                        </div>
+                        <div class="language-option" data-lang="mr" onclick="setLanguage('mr')">
+                            <div class="language-name">मराठी</div>
+                            <div class="language-code">mr</div>
+                        </div>
+                        <div class="language-option" data-lang="hinglish" onclick="setLanguage('hinglish')">
+                            <div class="language-name">Hinglish</div>
+                            <div class="language-code">hin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Settings -->
+                <div class="settings-section">
+                    <label class="settings-label">🎤 Audio Settings</label>
+                    <div class="toggle-switch">
+                        <span>Enable Voice Input</span>
+                        <label class="switch">
+                            <input type="checkbox" id="voiceToggle" onchange="toggleVoice()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span>Autoplay Responses</span>
+                        <label class="switch">
+                            <input type="checkbox" id="audioToggle" onchange="toggleAutoplay()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Information -->
+                <div class="settings-section">
+                    <label class="settings-label">ℹ️ About</label>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                        <p><strong>TalkToBank</strong> v1.0</p>
+                        <p>Your AI-powered voice banking assistant with multilingual support.</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.8rem;">
+                            © 2025 TalkToBank. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Modal -->
+    <div id="profileModal" class="profile-modal">
+        <div class="profile-content">
+            <div class="profile-header">
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <div class="profile-avatar-large">DU</div>
+                    <div>
+                        <div style="font-weight:700;">Demo User</div>
+                        <div style="color:var(--text-secondary); font-size:0.9rem;">demo.user@example.com</div>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeProfile()">&times;</button>
+            </div>
+            <div class="profile-body">
+                <div class="profile-row"><strong>Preferred language:</strong> <span style="color:var(--text-secondary)"> <span id="profileLanguage">English</span></span></div>
+                <div class="profile-row"><strong>Voice input:</strong> <span style="color:var(--text-secondary)" id="profileVoice">Enabled</span></div>
+                <div class="profile-actions">
+                    <button class="btn" onclick="openSettings(event)">Edit Preferences</button>
+                    <button class="btn" onclick="alert('Logout clicked')">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
